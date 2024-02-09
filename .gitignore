@@ -1,0 +1,13 @@
+node_modules
+lib/function/node_modules
+package-lock.json
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+.idea
+project_configs/environment_options.yaml
+project_configs/consoleViewOnlyGroup.yaml
+cdk.context.json
+keypemToConnect.pem
+cdk.out
+node_modules

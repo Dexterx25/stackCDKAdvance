@@ -1,0 +1,32 @@
+project_name: "cdkDeploy"
+framework_version: 1
+
+account: "0"
+region: "us-east-1"
+environment: "dev"
+secertTokenGitHub: "0"
+lambda_parameters:
+  function_name: "cdkDeploy"
+  description: "Cdk stack with CI/CD and more"
+  handler: "handler"
+  runtime: "16x"
+  logs_retention_period: "six_months"
+  memory_size: 2048
+  timeout: 900
+  deployment_config: "allOnce"
+  modules_to_install:
+    - "jsonpath"
+  layers:
+  environment_vars:
+    NODE_ENV: "dev"
+    PROJECT_NAME: "DexApp"
+    NODE_API_PORT: "3000"
+  db_tables:
+    - "BAAS.BANK4US"
+  secrets:
+tags:
+  Project: "DexApp"
+  Environment: dev
+  Layer: "Application"
+  ProjectCode: "0111"
+  Cycle: "Origination"
