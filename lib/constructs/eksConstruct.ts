@@ -10,7 +10,7 @@ import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 const helper = require('js-yaml');
 import * as fs from 'fs'
 import * as iam from 'aws-cdk-lib/aws-iam'
-import { KubectlV27Layer } from '@aws-cdk/lambda-layer-kubectl-v27';
+import { KubectlV28Layer } from '@aws-cdk/lambda-layer-kubectl-v28';
 /** Class representing a vpc import from parameter stores
  * with a predefine sysntax name
  *  */
@@ -48,7 +48,7 @@ class CustomEKS  extends Construct {
         securityGroup,
         clusterName: `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/ClusterEKS`,
         placeClusterHandlerInVpc: true,
-        kubectlLayer: new KubectlV27Layer(this, 'kubectl'),
+        kubectlLayer: new KubectlV28Layer(this, 'kubectl'),
         vpcSubnets: [vpc.vpc.selectSubnets({
           subnets: vpc.subn,
           onePerAz: true,
