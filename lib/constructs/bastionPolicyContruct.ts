@@ -13,7 +13,7 @@ class CustomBastionPolicy  extends Construct {
     constructor(scope: Construct, id: string, projectProps: StackProps ) {
         super(scope, id);
       
-          this.user = iam.User.fromUserArn(this, 'userARN', 'arn:aws:iam::666196153281:user/dexterx25')
+          this.user = iam.User.fromUserArn(this, 'userARN', getString(projectProps, 'arn_iam_user'))
 
            const statements = [
               new iam.PolicyStatement({
@@ -95,13 +95,9 @@ class CustomBastionPolicy  extends Construct {
                 statements: [
                 new iam.PolicyStatement({
                     actions: [
-                    "autoscaling:DescribeAutoScalingGroups",
-                    "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeLaunchConfigurations",
-                    "autoscaling:DescribeTags",
-                    "autoscaling:SetDesiredCapacity",
-                    "autoscaling:TerminateInstanceInAutoScalingGroup",
-                    "ec2:DescribeLaunchTemplateVersions"
+                    "autoscaling:*",
+                    "ec2:*",
+                    "eks:*"
                     ],
                     resources: ["*"],
                     effect: iam.Effect.ALLOW
@@ -348,7 +344,6 @@ class CustomBastionPolicy  extends Construct {
                 new iam.PolicyStatement({
                   resources: [
                     '*',
-                    'arn:aws:eks:us-east-1:666196153281:cluster/*'
                   ],
                   actions: [
                     "eks:*",
@@ -412,27 +407,15 @@ class CustomBastionPolicy  extends Construct {
               ]
             })
             }
-           /**
-                 this.bastionHostRole = new iam.Role(this, 'MasterRole', {
+           
+          this.bastionHostRole = new iam.Role(this, 'MasterRole', {
                    assumedBy: new iam.AccountRootPrincipal(),
                   description: 'An example IAM role in AWS CDK',
                   roleName: `MasterRole`,
-                  managedPolicies: [
-                    // SSM Manager Permissions
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSWorkerNodePolicy'),
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSClusterPolicy'),
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSServicePolicy'),
-                    ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
-                    //  Read only EKS Permissions
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'),
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKS_CNI_Policy'),
-                    iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSVPCResourceController'),  //NOTE: Required for Security Groups for pods        
-                  ],
                   inlinePolicies: {
                     inlinePolicies: this.bastionHostPolicies
                   },
                 });
-            */
                               
     }
 }

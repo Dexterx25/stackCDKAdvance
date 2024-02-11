@@ -14,11 +14,11 @@ export class CdkStackProyectStack extends cdk.Stack {
      * @Param {*} @CustomBastionPolicy is a class to create policies to a target role and user(s)
      * is needs in the infraestructure implementationss
      */
-    const { bastionHostRole, bastionHostPolicies, eksInlinePolicy, user} = new CustomBastionPolicy(
-      this,
-      `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/BastionPolicy`,
-      projectProps
-     )
+    // const { bastionHostRole, bastionHostPolicies, eksInlinePolicy, user} = new CustomBastionPolicy(
+    //   this,
+    //   `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/BastionPolicy`,
+    //   projectProps
+    //  )
 
     /**
      * @CustomVpc is a class to implement VPC and VPC subnets in avaliability zones
@@ -63,11 +63,7 @@ export class CdkStackProyectStack extends cdk.Stack {
       this,
       `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/ClusterEKS`,
       {
-        bastionHostRole,
         securityGroup,
-        bastionHostPolicies,
-        eksInlinePolicy,
-        user,
         vpc,
         ...projectProps,
         ...props,
@@ -79,7 +75,7 @@ export class CdkStackProyectStack extends cdk.Stack {
      
 
   }
-  public addUserData(asg: cdk.aws_autoscaling.AutoScalingGroup){
+    public addUserData(asg: cdk.aws_autoscaling.AutoScalingGroup){
     asg.addUserData('yum update -y')
     asg.addUserData('yum install httpd -y')
     asg.addUserData('sudo service httpd start')

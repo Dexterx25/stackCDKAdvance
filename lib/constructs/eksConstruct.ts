@@ -10,7 +10,7 @@ import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 const helper = require('js-yaml');
 import * as fs from 'fs'
 import * as iam from 'aws-cdk-lib/aws-iam'
-import { KubectlV28Layer } from '@aws-cdk/lambda-layer-kubectl-v28';
+import { KubectlV27Layer } from '@aws-cdk/lambda-layer-kubectl-v27';
 /** Class representing a vpc import from parameter stores
  * with a predefine sysntax name
  *  */
@@ -21,55 +21,64 @@ class CustomEKS  extends Construct {
     public readonly clusterKmsKey: Key;
      constructor(scope: Construct, id: string, projectProps: propsCustomEKS ) {
      super(scope, id);
-     const {vpc, bastionHostPolicies, eksInlinePolicy, securityGroup} = projectProps;
+     const {vpc, securityGroup} = projectProps;
      
-       this.clusterKmsKey = new Key(
+     const eksRole: iam.IRole = iam.Role.fromRoleArn(this, 'rolARN', getString(projectProps, 'role_arn_admin'))
+   /*   const eksPolicy = new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: ['eks:*', 'sts:*'],
+              resources: ['*', "arn:aws:eks:us-east-1:id:cluster/*"], // Adjust resource ARN as needed
+            }),
+          ],
+        });
+      const eksRole = new iam.Role(this, 'EksClusterRole', {
+          assumedBy: new iam.AccountRootPrincipal(), // Assumed by the root account for simplicity
+        });
+
+      eksRole.attachInlinePolicy(new iam.Policy(this, 'EksCreateClusterPolicy', {
+          document: eksPolicy,
+        }));
+        
+      new cdk.CfnOutput(this, 'EksClusterRoleArn', {
+          value: eksRole.roleArn,
+        });
+
+        this.clusterKmsKey = new Key(
         this, 
         `ekskmskey`, 
         {
         enableKeyRotation: true,
         alias: cdk.Fn.join('', ['alias/', 'eks/', `ekskmskey`]),
-      });
-      const eksRole = new iam.Role(this, 'EksClusterMasterRole', {
-        assumedBy: new iam.AccountRootPrincipal(),
-        managedPolicies: [
-          iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSServicePolicy"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSClusterPolicy"),
-        ],
-        inlinePolicies: eksInlinePolicy 
-      });
+      }); */
+      
       this.cluster = new eks.Cluster(this, `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/ClusterEKS`, {
         version: eks.KubernetesVersion.V1_27,
-        defaultCapacity: 0,  // we want to manage capacity our selves
-        endpointAccess: eks.EndpointAccess.PRIVATE,
+        defaultCapacity: 3,  // we want to manage capacity our selves
+        endpointAccess: eks.EndpointAccess.PUBLIC_AND_PRIVATE,
         vpc: vpc.vpc,
-        secretsEncryptionKey: this.clusterKmsKey,
-        mastersRole: eksRole,
+        role: eksRole,
+       // mastersRole: eksRole,
+       // secretsEncryptionKey: this.clusterKmsKey,
         securityGroup,
         clusterName: `${getString(projectProps, 'project_name')}/${getString(projectProps, 'environment')}/ClusterEKS`,
         placeClusterHandlerInVpc: true,
-        kubectlLayer: new KubectlV28Layer(this, 'kubectl'),
+        kubectlLayer: new KubectlV27Layer(this, 'kubectl'),
         vpcSubnets: [vpc.vpc.selectSubnets({
           subnets: vpc.subn,
           onePerAz: true,
         })],
       });
+      this.cluster.awsAuth.addRoleMapping(eksRole, { groups: [ 'system:masters' ]});
 
-      const nodegroupRole = new iam.Role(scope, 'NodegroupRole', {
-        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-        managedPolicies: [
-          iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSWorkerNodePolicy"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEKS_CNI_Policy"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2ContainerRegistryReadOnly"),
-        ],
-        inlinePolicies: eksInlinePolicy
-      });
+      this.cluster.awsAuth.addMastersRole(eksRole);
 
       this.cluster.addNodegroupCapacity("managed-node", {
         instanceTypes: [ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO)],
         minSize: 1,
-        maxSize: 1,
-        nodeRole: nodegroupRole
+        maxSize: 2,
+        nodeRole: eksRole
       });
 
       console.log('pasó eks clouster creation');
@@ -104,10 +113,6 @@ class CustomEKS  extends Construct {
       this.awsauth = new eks.AwsAuth(this, 'EKS_AWSAUTH', {
         cluster: this.cluster,
       });
-
-      this.cluster.awsAuth.addRoleMapping(eksRole, { groups: [ 'system:masters' ]});
-
-      this.cluster.awsAuth.addMastersRole(eksRole);
     
     }
      

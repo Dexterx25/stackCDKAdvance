@@ -2,13 +2,14 @@ import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "
 import { Construct } from "constructs";
 import { StackProps } from "aws-cdk-lib";
 import * as iam from 'aws-cdk-lib/aws-iam'
+import { getString } from "../../utils";
 class RoleManagment  extends Construct {
     public bastionHostPolicy: ManagedPolicy;
     public bastionHostRole: Role;
     constructor(scope: Construct, id: string, projectProps: StackProps ) {
         super(scope, id);
       
-          const user = iam.User.fromUserArn(this, 'userARN', 'arn:aws:iam::666196153281:user/dexterx25')
+          const user = iam.User.fromUserArn(this, 'userARN', getString(projectProps, 'arn_iam_user'))
 
             this.bastionHostPolicy = new iam.ManagedPolicy(this, 'bastionHostManagedPolicy', {
               description: 'Allows ec2 describe action',

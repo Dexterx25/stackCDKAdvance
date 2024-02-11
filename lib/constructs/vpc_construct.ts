@@ -27,7 +27,7 @@ class CustomVpc  extends Construct {
                     cidrMask: 24,
                 },
             ],
-           // maxAzs: 3,
+            maxAzs: 2,
         }
         )
         
