@@ -4,37 +4,40 @@ import * as cdk from "aws-cdk-lib";
 export default class JenkinsManager {
   public cluster: eks.Cluster;
   public volume: cdk.aws_ec2.CfnVolume;
+
   constructor(cluster: eks.Cluster, volume: cdk.aws_ec2.CfnVolume) {
     this.cluster = cluster;
     this.volume = volume;
   }
+
   installJenkins() {
-    this.cluster.addManifest("JenkinsNamespace", {
+    const namespaceManifest = this.cluster.addManifest("JenkinsNamespace", {
       apiVersion: "v1",
       kind: "Namespace",
       metadata: { name: "jenkins" },
     });
 
     // Crear el PersistentVolume
-    this.cluster.addManifest("JenkinsPV", {
+    const pvManifest = this.cluster.addManifest("JenkinsPV", {
       apiVersion: "v1",
       kind: "PersistentVolume",
-      metadata: { name: "jenkins-pv", namespace: 'jenkins' },
+      metadata: { name: "jenkins-pv", namespace: "jenkins" },
       spec: {
         capacity: { storage: "10Gi" },
         accessModes: ["ReadWriteOnce"],
         persistentVolumeReclaimPolicy: "Retain",
-        persistentVolumeSource: {
-          awsElasticBlockStore: {
-            volumeId: this.volume.ref,
-            fsType: "ext4",
-          },
+        storageClassName: "gp2",  // Opcional
+        awsElasticBlockStore: {   // Correcto
+          volumeID: this.volume.ref,
+          fsType: "ext4",
         },
       },
     });
 
+    pvManifest.node.addDependency(namespaceManifest);
+
     // Crear el PersistentVolumeClaim
-    this.cluster.addManifest("JenkinsPVC", {
+    const pvcManifest = this.cluster.addManifest("JenkinsPVC", {
       apiVersion: "v1",
       kind: "PersistentVolumeClaim",
       metadata: { name: "jenkins-pvc", namespace: "jenkins" },
@@ -48,10 +51,14 @@ export default class JenkinsManager {
       },
     });
 
-    this.cluster.addHelmChart("Jenkins", {
+    pvcManifest.node.addDependency(namespaceManifest);
+
+    // Desplegar el Helm Chart
+    const helmChart = this.cluster.addHelmChart("Jenkins", {
       chart: "jenkins",
       repository: "https://charts.jenkins.io",
       namespace: "jenkins",
+      release: "jenkins",
       values: {
         serviceType: "LoadBalancer",
         persistence: {
@@ -60,5 +67,7 @@ export default class JenkinsManager {
         },
       },
     });
+
+    helmChart.node.addDependency(pvcManifest);
   }
 }

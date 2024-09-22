@@ -16,6 +16,7 @@ class RoleConstruct extends Construct {
         new iam.ServicePrincipal('sts.amazonaws.com'),
       ),
     });
+    this.masterRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'))
     this.masterRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSClusterPolicy'));
     this.masterRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSServicePolicy'));
 

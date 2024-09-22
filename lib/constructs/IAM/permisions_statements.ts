@@ -104,6 +104,7 @@ const statementsAll: iam.PolicyStatement[] = [
   new iam.PolicyStatement({
     actions: [
     "iam:*",
+    "iam:PassRole"
     ],
     resources: ["*"],
     effect: iam.Effect.ALLOW

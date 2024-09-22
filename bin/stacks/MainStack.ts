@@ -7,7 +7,7 @@ import EKSClusterConstruct from '../../lib/constructs/EKS/clusterConstruct';
 import SecurityGroupConstruct from '../../lib/constructs/EC2/security_group_construct';
 import JenkinsManager from '../../lib/constructs/EKS/jenkins';
 
-export class MainStack extends cdk.Stack {
+export class MainStack2 extends cdk.Stack {
     constructor(scope: Construct, id:string, props: any){
         super(scope, id, props)
         const {
@@ -33,7 +33,6 @@ export class MainStack extends cdk.Stack {
 
         const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
-            role,
             securityGroup,
             vpc
         })

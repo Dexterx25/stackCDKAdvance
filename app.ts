@@ -5,10 +5,10 @@ import * as cdk from 'aws-cdk-lib';
 
 import props from './project_configs/project_config'
 import { getString } from './utils';
-import { MainStack } from './bin/stacks';
+import { MainStack2 } from './bin/stacks';
 const app = new cdk.App();
 
-new MainStack(app, `${getString(props, 'project_name').concat('stack1')}/${getString(props, 'environment')}`,  {
+new MainStack2(app, `${getString(props, 'project_name').concat('stack10')}/${getString(props, 'environment')}`,  {
     env: { 
       account: getString(props, 'account'), 
       region: getString(props, 'region'), 
