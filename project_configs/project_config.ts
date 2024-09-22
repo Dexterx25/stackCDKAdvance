@@ -1,4 +1,3 @@
-import { StackProps } from "aws-cdk-lib";
 const helper = require('js-yaml');
 import * as path from 'path';
 import * as fs from 'fs'

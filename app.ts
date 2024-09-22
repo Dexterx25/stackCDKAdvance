@@ -8,11 +8,11 @@ import { getString } from './utils';
 import { MainStack } from './bin/stacks';
 const app = new cdk.App();
 
-
-new MainStack(app, getString(props, 'project_name').concat('stack1'),  {
+new MainStack(app, `${getString(props, 'project_name').concat('stack1')}/${getString(props, 'environment')}`,  {
     env: { 
       account: getString(props, 'account'), 
       region: getString(props, 'region'), 
+      adminArn: getString(props.infra_vars.environment_vars, 'adminArn'),
       InstancePort: "80",
       HealthCheckPath: "/",
       HealthCheckPort: "80",

@@ -6,16 +6,19 @@ class RoleConstruct extends Construct {
 
    constructor(scope: Construct, id: string, props: any) {
     super(scope, id);
-    this.masterRole = new iam.Role(this, "MasterRole", {
+    this.masterRole = new iam.Role(this, id, {
       inlinePolicies: { "basicPolicyDeploy": PoliciesAllDeploy },
-      roleName: 'MasterRole',
+      roleName: `master`,
       assumedBy: new iam.CompositePrincipal(
-        new iam.ArnPrincipal(props.adminArn),
-        new iam.ArnPrincipal(props.lead1Arn),
         new iam.ServicePrincipal('ec2.amazonaws.com'),
-        new iam.ServicePrincipal('eks.amazonaws.com')
-      )
+        new iam.ServicePrincipal('eks.amazonaws.com'),
+        new iam.ServicePrincipal('lambda.amazonaws.com'),
+        new iam.ServicePrincipal('sts.amazonaws.com'),
+      ),
     });
+    this.masterRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSClusterPolicy'));
+    this.masterRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSServicePolicy'));
+
   }
 }
 export default RoleConstruct;

@@ -2,91 +2,48 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import RoleConstruct from '../../lib/constructs/IAM/roles';
 import { CustomVpc } from '../../lib/constructs/EC2/vpc_construct';
-import EC2InstanceConstruct from '../../lib/constructs/EC2/ec2_instance_construct';
-import { SecurityGroup, UserData } from 'aws-cdk-lib/aws-ec2';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import EKSClusterConstruct from '../../lib/constructs/EKS/clusterConstruct';
 import SecurityGroupConstruct from '../../lib/constructs/EC2/security_group_construct';
-import LBContruct from '../../lib/constructs/EC2/loadBalancer';
-import TargetGroupConstruct from '../../lib/constructs/EC2/targetGroupsConstruct';
-import AutoScallingEC2Construct from '../../lib/constructs/EC2/autoScalling_construct';
+import JenkinsManager from '../../lib/constructs/EKS/jenkins';
 
 export class MainStack extends cdk.Stack {
     constructor(scope: Construct, id:string, props: any){
         super(scope, id, props)
         const {
-            masterRole
-        } = new RoleConstruct(this, id, props)
-        /**
-         * WAF (needs)
-         */
+            masterRole: role
+        } = new RoleConstruct(this, `${id}/role`, props)
        
         const {
             vpc
-        } = new CustomVpc(this, id, props)
+        } = new CustomVpc(this, `${id}/vpc`, props)
 
         const { 
-            basicSecurityGroup
-        } = new SecurityGroupConstruct(this, id, {
+            basicSecurityGroup: securityGroup,
+        } = new SecurityGroupConstruct(this, `${id}/sec_grp`, {
             ...props,
             vpc,
         })
 
-        const {
-            elbLoadBalancerBasic
-        } = new LBContruct(this, id, {
+        const volume = new ec2.CfnVolume(this, 'MyEBSVolume', {
+            availabilityZone: `${props.env.region}a`, // Ajusta según la AZ de tu VPC
+            size: 10,
+            volumeType: 'gp2',
+          });
+
+        const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
-            vpc,
-            securityGroup: basicSecurityGroup,
+            role,
+            securityGroup,
+            vpc
         })
-
-        /* ec2 single const {
-            ec2_instance
-        } = new EC2InstanceConstruct(this, id, {
-            ...props,
-            vpc,
-            role: masterRole,
-            userData: null,
-            securityGroup: basicSecurityGroup
-        }) */
-
-        const listenerELB = elbLoadBalancerBasic.addListener('publicListener', {
-            port: 80,
-            open: true,
+        basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
+            instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MEDIUM),
+            minCapacity: 2,
+            maxCapacity: 5,
         })
+        const jenkinsInst = new JenkinsManager(basicCluster, volume);
 
-        const {
-            targetGroup
-        } = new TargetGroupConstruct(this, id, {
-            ...props,
-            vpc,
-        })
-        
-        listenerELB.addTargetGroups(id, {
-            targetGroups: [targetGroup],
-        })
-
-        const {
-           autoScallingEC2
-        } = new AutoScallingEC2Construct(this, id, {
-            ...props, 
-            vpc,
-            role: masterRole,
-            userData: null,
-            securityGroup: basicSecurityGroup
-        })
-
-        targetGroup.addTarget(autoScallingEC2)
-        /**
-         * ECR
-         */
-
-        /**
-         * sync JENKINS -> CI/CD
-         */
-
-        /**
-         * EKS
-         */
-
-
+        jenkinsInst.installJenkins()
     }
 }

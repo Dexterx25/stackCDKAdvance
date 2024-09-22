@@ -11,9 +11,8 @@ class SecurityGroupConstruct extends Construct {
             this, 
             `${id}`, 
             {
-             ...props,
+              allowAllOutbound:false,
               vpc: props.vpc,
-              allowAllOutbound: true,
               securityGroupName: id
             }
          );

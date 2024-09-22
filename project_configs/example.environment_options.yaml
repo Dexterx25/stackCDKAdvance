@@ -21,8 +21,6 @@ lambda_parameters:
     NODE_ENV: "dev"
     PROJECT_NAME: "DexApp"
     NODE_API_PORT: "3000"
-  db_tables:
-    - "BAAS.BANK4US"
   secrets:
 tags:
   Project: "DexApp"

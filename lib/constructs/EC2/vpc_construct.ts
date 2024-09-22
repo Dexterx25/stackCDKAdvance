@@ -8,19 +8,18 @@ class CustomVpc  extends Construct {
      constructor(scope: Construct, id: string, projectProps: StackProps) {
      super(scope, id);
      this.vpc = new ec2.Vpc(this, 
-        `${id}/${getString(projectProps, 'environment')}/private_vpc`,
+        `${id}`,
         {
-            cidr: '10.0.0.0/16',
             maxAzs: 2,
             natGateways: 1,
             subnetConfiguration: [
                 {
-                    name: `${id}/${getString(projectProps, 'environment')}/public-subnet01`,
+                    name: `${id}/public-subnet01`,
                     subnetType: ec2.SubnetType.PUBLIC,
                     cidrMask: 24,
                 },
                 {
-                    name: `${id}/${getString(projectProps, 'environment')}/private-subnet01`,
+                    name: `${id}/private-subnet01`,
                     subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
                     cidrMask: 24,
                 },
