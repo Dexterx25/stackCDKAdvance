@@ -4,86 +4,15 @@ metadata:
   name: jenkins
 
 ---
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: jenkins-manager
+  name: jenkins-serviceaccount
   namespace: jenkins
 
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: jenkins-agent
-  namespace: jenkins
 
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: jenkins
-  namespace: jenkins
-rules:
-- apiGroups: ["*"]
-  resources: ["pods"]
-  verbs: ["create","delete","get","list","patch","update","watch"]
-- apiGroups: ["*"]
-  resources: ["pods/exec"]
-  verbs: ["create","delete","get","list","patch","update","watch"]
-- apiGroups: ["*"]
-  resources: ["pods/log"]
-  verbs: ["get","list","watch"]
-- apiGroups: ["*"]
-  resources: ["secrets"]
-  verbs: ["get"]
-- apiGroups: ["*"]
-  resources: ["persistentvolumeclaims"]
-  verbs: ["create","delete","get","list","update","watch"]
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: jenkins
-  namespace: jenkins
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: jenkins
-subjects:
-- kind: ServiceAccount
-  name: jenkins-manager
-- kind: ServiceAccount
-  name: jenkins-agent
-
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: gp2-immediate
-provisioner: kubernetes.io/aws-ebs
-parameters:
-  type: gp2
-  iopsPerGB: "10"
-  encrypted: "true"
-volumeBindingMode: Immediate
-reclaimPolicy: Retain
-allowVolumeExpansion: true
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: jenkins-pvc
-  namespace: jenkins
-spec:
-  storageClassName: gp2-immediate
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -91,8 +20,6 @@ metadata:
   namespace: jenkins
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
   selector:
     matchLabels:
       app: jenkins
@@ -101,63 +28,42 @@ spec:
       labels:
         app: jenkins
     spec:
+      serviceAccountName: jenkins-serviceaccount
       containers:
-        - name: jenkins
-          image: jenkins/jenkins:lts
-          ports:
-            - containerPort: 8080
-              name: manager
-            - containerPort: 50000
-              protocol: TCP
-              name: jnlp
-          volumeMounts:
-            - mountPath: /var/jenkins_home
-              name: jenkins-volume
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
-              memory: "1Gi"
-              cpu: "1"
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        ports:
+        - containerPort: 8080
+          name: manager
+        - containerPort: 50000
+          name: jnlp
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-volume
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
       volumes:
-        - name: jenkins-volume
-          persistentVolumeClaim:
-            claimName: jenkins-pvc
+      - name: jenkins-volume
+        emptyDir: {}
 
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
   name: jenkins
   namespace: jenkins
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-internal: "false"
 spec:
   type: LoadBalancer
-  externalTrafficPolicy: Cluster
-  selector:
-    app: jenkins
   ports:
     - port: 80
       targetPort: 8080
       protocol: TCP
       name: manager
-    - port: 50000
-      targetPort: 50000
-      protocol: TCP
-      name: agent
-
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: jenkins-quota
-  namespace: jenkins
-spec:
-  hard:
-    requests.cpu: "2"
-    requests.memory: "2Gi"
-    limits.cpu: "4"
-    limits.memory: "4Gi"
+  selector:
+    app: jenkins
