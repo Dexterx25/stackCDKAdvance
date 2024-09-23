@@ -57,21 +57,18 @@ subjects:
   name: jenkins-agent
 
 ---
-apiVersion: v1
-kind: PersistentVolume
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: jenkins-pv
-  namespace: jenkins
-spec:
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: gp2
-  awsElasticBlockStore:
-    volumeID: <your-volume-id>
-    fsType: ext4
+  name: gp2-immediate
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  iopsPerGB: "10"
+  encrypted: "true"
+volumeBindingMode: Immediate
+reclaimPolicy: Retain
+allowVolumeExpansion: true
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -79,11 +76,13 @@ metadata:
   name: jenkins-pvc
   namespace: jenkins
 spec:
+  storageClassName: gp2-immediate
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 5Gi
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -114,10 +113,18 @@ spec:
           volumeMounts:
             - mountPath: /var/jenkins_home
               name: jenkins-volume
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
       volumes:
         - name: jenkins-volume
           persistentVolumeClaim:
             claimName: jenkins-pvc
+
 ---
 apiVersion: v1
 kind: Service
@@ -141,3 +148,16 @@ spec:
       targetPort: 50000
       protocol: TCP
       name: agent
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: jenkins-quota
+  namespace: jenkins
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: "2Gi"
+    limits.cpu: "4"
+    limits.memory: "4Gi"

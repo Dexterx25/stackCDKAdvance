@@ -26,26 +26,16 @@ export class MainStack2 extends cdk.Stack {
             vpc,
         })
 
-        const volume = new ec2.CfnVolume(this, 'MyEBSVolume', {
-            availabilityZone: `${props.env.region}a`, // Ajusta según la AZ de tu VPC
-            size: 10,
-            volumeType: 'gp2',
-          });
-
         const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
             securityGroup,
+            adminUsername:props.env.adminUsername,
+            adminArn:props.env.adminArn,
+            role,
             vpc
         })
-        EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
-
-        basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
-            instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MEDIUM),
-            minCapacity: 2,
-            maxCapacity: 5,
-        })
-        const jenkinsInst = new JenkinsManager(basicCluster, volume);
-
+        // EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
+        const jenkinsInst = new JenkinsManager(basicCluster);
         jenkinsInst.installJenkins()
     }
 }

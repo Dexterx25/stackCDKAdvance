@@ -1,75 +1,20 @@
 import * as eks from "aws-cdk-lib/aws-eks";
-import * as cdk from "aws-cdk-lib";
+import * as fs from 'fs';
+import * as YAML from 'yaml';
 
 export default class JenkinsManager {
   public cluster: eks.Cluster;
-  public volume: cdk.aws_ec2.CfnVolume;
 
-  constructor(cluster: eks.Cluster, volume: cdk.aws_ec2.CfnVolume) {
+  constructor(cluster: eks.Cluster) {
     this.cluster = cluster;
-    this.volume = volume;
   }
 
   installJenkins() {
-    const namespaceManifest = this.cluster.addManifest("JenkinsNamespace", {
-      apiVersion: "v1",
-      kind: "Namespace",
-      metadata: { name: "jenkins" },
-    });
+    const jenkinsYAML = fs.readFileSync('./lib/scripts/jenkins.install.yaml', 'utf8');
+    let jenkinsManifests = YAML.parseAllDocuments(jenkinsYAML);
 
-    // Crear el PersistentVolume
-    const pvManifest = this.cluster.addManifest("JenkinsPV", {
-      apiVersion: "v1",
-      kind: "PersistentVolume",
-      metadata: { name: "jenkins-pv", namespace: "jenkins" },
-      spec: {
-        capacity: { storage: "10Gi" },
-        accessModes: ["ReadWriteOnce"],
-        persistentVolumeReclaimPolicy: "Retain",
-        storageClassName: "gp2",  // Opcional
-        awsElasticBlockStore: {   // Correcto
-          volumeID: this.volume.ref,
-          fsType: "ext4",
-        },
-      },
-    });
+    jenkinsManifests = jenkinsManifests.map((doc) => doc.toJSON());
 
-    pvManifest.node.addDependency(namespaceManifest);
-
-    // Crear el PersistentVolumeClaim
-    const pvcManifest = this.cluster.addManifest("JenkinsPVC", {
-      apiVersion: "v1",
-      kind: "PersistentVolumeClaim",
-      metadata: { name: "jenkins-pvc", namespace: "jenkins" },
-      spec: {
-        accessModes: ["ReadWriteOnce"],
-        resources: {
-          requests: {
-            storage: "10Gi",
-          },
-        },
-      },
-    });
-
-    pvcManifest.node.addDependency(namespaceManifest);
-
-    // Desplegar el Helm Chart
-    const helmChart = this.cluster.addHelmChart("Jenkins", {
-      chart: "jenkins",
-      repository: "https://charts.jenkins.io",
-      namespace: "jenkins",
-      release: "jenkins",
-      values: {
-        service: {
-          type: "LoadBalancer",
-        },
-        persistence: {
-          enabled: true,
-          existingClaim: "jenkins-pvc",
-        },
-      },
-    });
-
-    helmChart.node.addDependency(pvcManifest);
+    this.cluster.addManifest("Jenkins", ...jenkinsManifests);
   }
 }
