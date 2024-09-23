@@ -60,7 +60,9 @@ export default class JenkinsManager {
       namespace: "jenkins",
       release: "jenkins",
       values: {
-        serviceType: "LoadBalancer",
+        service: {
+          type: "LoadBalancer",
+        },
         persistence: {
           enabled: true,
           existingClaim: "jenkins-pvc",

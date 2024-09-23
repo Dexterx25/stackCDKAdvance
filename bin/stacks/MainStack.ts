@@ -6,6 +6,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import EKSClusterConstruct from '../../lib/constructs/EKS/clusterConstruct';
 import SecurityGroupConstruct from '../../lib/constructs/EC2/security_group_construct';
 import JenkinsManager from '../../lib/constructs/EKS/jenkins';
+import { EKSAccessManager } from '../../lib/constructs/EKS/accessManager';
 
 export class MainStack2 extends cdk.Stack {
     constructor(scope: Construct, id:string, props: any){
@@ -36,6 +37,8 @@ export class MainStack2 extends cdk.Stack {
             securityGroup,
             vpc
         })
+        EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
+
         basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
             instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MEDIUM),
             minCapacity: 2,
