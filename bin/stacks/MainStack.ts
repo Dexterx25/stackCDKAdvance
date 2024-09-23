@@ -26,6 +26,12 @@ export class MainStack2 extends cdk.Stack {
             vpc,
         })
 
+        const volume = new ec2.CfnVolume(this, `${id}/MyEBSVolume`, {
+            availabilityZone: `${props.env.region}a`,
+            size: 10,
+            volumeType: 'gp2',
+          });
+
         const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
             securityGroup,
@@ -35,7 +41,8 @@ export class MainStack2 extends cdk.Stack {
             vpc
         })
         // EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
-        const jenkinsInst = new JenkinsManager(basicCluster);
+        const jenkinsInst = new JenkinsManager(basicCluster, volume);
+
         jenkinsInst.installJenkins()
     }
 }

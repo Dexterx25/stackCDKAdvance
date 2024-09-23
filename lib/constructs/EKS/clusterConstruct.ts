@@ -18,17 +18,21 @@ class EKSClusterConstruct extends Construct {
       endpointAccess: eks.EndpointAccess.PUBLIC_AND_PRIVATE,
       defaultCapacity: 0,
     });
-    const adminUser =  iam.User.fromUserArn(this, 'dex', props.adminArn)
+    const dexRole: cdk.aws_iam.Role = role
 
-    this.basicCluster.awsAuth.addUserMapping(adminUser, {groups: ["system:masters"]})
+    this.basicCluster.awsAuth.addMastersRole(dexRole, 'master');
+  
+    const dexUser = iam.User.fromUserName(this, 'DexUser', props.adminUsername);
+  
+    this.basicCluster.awsAuth.addUserMapping(dexUser, { groups: ['system:masters'] });
 
     this.basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
-      instanceType: new cdk.aws_ec2.InstanceType('t2.medium'), // Cambia según tus necesidades
+      instanceType: new cdk.aws_ec2.InstanceType('t2.medium'),
       minCapacity: 1,
       maxCapacity: 3,
      })
-    // Configuración de límites de recursos para el grupo de nodos
-    this.basicCluster.addNodegroupCapacity('MyNodeGroup', {
+
+   this.basicCluster.addNodegroupCapacity(`${id}/MyNodeGroup`, {
         desiredSize: 2,
         minSize: 1,
         maxSize: 3,
