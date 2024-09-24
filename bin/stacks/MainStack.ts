@@ -34,7 +34,6 @@ export class MainStack2 extends cdk.Stack {
             role,
             vpc
         })
-        // EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
         const jenkinsInst = new JenkinsManager(basicCluster);
         jenkinsInst.installJenkins()
     }
