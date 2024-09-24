@@ -5,22 +5,22 @@ import * as YAML from 'yaml';
 
 export default class JenkinsManager {
   public cluster: eks.Cluster;
-  public volume: cdk.aws_ec2.CfnVolume;
+  public fileSystem: cdk.aws_efs.FileSystem
 
-  constructor(cluster: eks.Cluster, volume: cdk.aws_ec2.CfnVolume) {
+  constructor(cluster: eks.Cluster, fileSystem: cdk.aws_efs.FileSystem) {
     this.cluster = cluster;
-    this.volume = volume;
+    this.fileSystem = fileSystem
   }
 
   installJenkins() {
-    const jenkinsYAML = fs.readFileSync('./lib/scripts/jenkins.ebs.install.yaml', 'utf8');
+    const jenkinsYAML = fs.readFileSync('./lib/scripts/jenkins.efs.install.yaml', 'utf8');
     let jenkinsManifests = YAML.parseAllDocuments(jenkinsYAML);
 
     jenkinsManifests = jenkinsManifests.map((doc) => doc.toJSON());
 
     jenkinsManifests = jenkinsManifests.map((resource:any) => {
       if (resource.kind === 'PersistentVolume') {
-        resource.spec.awsElasticBlockStore.volumeID = this.volume.attrVolumeId;
+        resource.spec.csi.volumeHandle = `${this.fileSystem.fileSystemId}`;
       }
       return resource;
     });

@@ -5,6 +5,15 @@ metadata:
 
 ---
 
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+provisioner: efs.csi.aws.com
+volumeBindingMode: Immediate
+
+---
+
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -13,13 +22,12 @@ spec:
   capacity:
     storage: 10Gi
   accessModes:
-    - ReadWriteMany # Permite que múltiples nodos accedan a este volumen
+    - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: efs-sc
   csi:
     driver: efs.csi.aws.com
     volumeHandle: <your-efs-id> # Aquí debes poner el ID de tu sistema de archivos EFS
-
 ---
 
 apiVersion: v1

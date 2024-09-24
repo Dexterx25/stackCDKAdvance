@@ -6,8 +6,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import EKSClusterConstruct from '../../lib/constructs/EKS/clusterConstruct';
 import SecurityGroupConstruct from '../../lib/constructs/EC2/security_group_construct';
 import JenkinsManager from '../../lib/constructs/EKS/jenkins';
-import { EKSAccessManager } from '../../lib/constructs/EKS/accessManager';
-
+import * as efs from 'aws-cdk-lib/aws-efs';
+import * as iam from 'aws-cdk-lib/aws-iam'
 export class MainStack2 extends cdk.Stack {
     constructor(scope: Construct, id:string, props: any){
         super(scope, id, props)
@@ -26,12 +26,6 @@ export class MainStack2 extends cdk.Stack {
             vpc,
         })
 
-        const volume = new ec2.CfnVolume(this, `${id}/MyEBSVolume`, {
-            availabilityZone: `${props.env.region}a`,
-            size: 10,
-            volumeType: 'gp2',
-          });
-
         const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
             securityGroup,
@@ -40,8 +34,25 @@ export class MainStack2 extends cdk.Stack {
             role,
             vpc
         })
-        // EKSAccessManager.addUserToEksCluster(basicCluster, props.env.adminArn, "dex");
-        const jenkinsInst = new JenkinsManager(basicCluster, volume);
+
+        const fileSystem = new efs.FileSystem(this, 'JenkinsEfs', {
+            vpc: vpc,
+            lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
+            performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
+            throughputMode: efs.ThroughputMode.BURSTING,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+          });
+          new iam.PolicyStatement({
+            actions: ['elasticfilesystem:ClientMount'],
+            principals: [new iam.AnyPrincipal()],
+            conditions: {
+              Bool: {
+                'elasticfilesystem:AccessedViaMountTarget': 'true'
+              }
+            }
+          })
+        
+        const jenkinsInst = new JenkinsManager(basicCluster, fileSystem);
 
         jenkinsInst.installJenkins()
     }

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-mount-test
+  namespace: jenkins
+spec:
+  containers:
+  - name: efs-mount-test
+    image: amazonlinux
+    command: ["sh", "-c", "while true; do echo 'Hello from EFS' >> /mnt/efs/test.txt; sleep 10; done"]
+    volumeMounts:
+    - mountPath: /mnt/efs
+      name: efs-volume
+  volumes:
+  - name: efs-volume
+    persistentVolumeClaim:
+      claimName: jenkins-pvc

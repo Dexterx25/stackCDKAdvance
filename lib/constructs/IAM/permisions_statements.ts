@@ -6,6 +6,65 @@ const statementsAll: iam.PolicyStatement[] = [
     resources: ["*"],
   }),
   new iam.PolicyStatement({
+    sid: "AllowDescribe",
+    effect: iam.Effect.ALLOW,
+    actions: [
+      "elasticfilesystem:DescribeAccessPoints",
+      "elasticfilesystem:DescribeFileSystems",
+      "elasticfilesystem:DescribeMountTargets",
+      "ec2:DescribeAvailabilityZones"
+    ],
+    resources: ["*"]
+  }),
+  new iam.PolicyStatement({
+    sid: "AllowCreateAccessPoint",
+    effect: iam.Effect.ALLOW,
+    actions: [
+      "elasticfilesystem:CreateAccessPoint"
+    ],
+    resources: ["*"],
+    conditions: {
+      "Null": {
+        "aws:RequestTag/efs.csi.aws.com/cluster": "false"
+      },
+      "ForAllValues:StringEquals": {
+        "aws:TagKeys": "efs.csi.aws.com/cluster"
+      }
+    }
+  }),
+  new iam.PolicyStatement({
+    sid: "AllowTagNewAccessPoints",
+    effect: iam.Effect.ALLOW,
+    actions: [
+      "elasticfilesystem:TagResource"
+    ],
+    resources: ["*"],
+    conditions: {
+      "StringEquals": {
+        "elasticfilesystem:CreateAction": "CreateAccessPoint"
+      },
+      "Null": {
+        "aws:RequestTag/efs.csi.aws.com/cluster": "false"
+      },
+      "ForAllValues:StringEquals": {
+        "aws:TagKeys": "efs.csi.aws.com/cluster"
+      }
+    }
+  }),
+  new iam.PolicyStatement({
+    sid: "AllowDeleteAccessPoint",
+    effect: iam.Effect.ALLOW,
+    actions: [
+      "elasticfilesystem:DeleteAccessPoint"
+    ],
+    resources: ["*"],
+    conditions: {
+      "Null": {
+        "aws:ResourceTag/efs.csi.aws.com/cluster": "false"
+      }
+    }
+  }),
+   new iam.PolicyStatement({
     actions: ['eks:*',
       "eks:CreateCluster",
       "autoscaling:DescribeAutoScalingGroups",
