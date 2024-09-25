@@ -38,6 +38,7 @@ export class MainStack2 extends cdk.Stack {
             throughputMode: efs.ThroughputMode.BURSTING,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
+          fileSystem.connections.allowFrom(securityGroup, ec2.Port.tcp(2049), 'Allow NFS access');
 
          const {basicCluster} = new EKSClusterConstruct(this, `${id}/eks_cluster`, {
             ...props,
@@ -48,6 +49,14 @@ export class MainStack2 extends cdk.Stack {
             vpc,
             efsId: fileSystem.fileSystemId
         })
+
+        basicCluster.addHelmChart('EfsCsiDriver', {
+            repository: 'https://kubernetes-sigs.github.io/aws-efs-csi-driver/',
+            chart: 'aws-efs-csi-driver',
+            release: 'efs-csi-driver',
+            namespace: 'kube-system',
+          });
+
         const efsStorageClass = {
             apiVersion: 'storage.k8s.io/v1',
             kind: 'StorageClass',
@@ -55,8 +64,7 @@ export class MainStack2 extends cdk.Stack {
             provisioner: 'efs.csi.aws.com',
             volumeBindingMode: 'Immediate'
           };
-          basicCluster.addManifest('EfsStorageClass', efsStorageClass);
-      
+
           const persistentVolume = {
             apiVersion: 'v1',
             kind: 'PersistentVolume',
@@ -74,9 +82,11 @@ export class MainStack2 extends cdk.Stack {
               },
             },
           };
+          basicCluster.addManifest('EfsStorageClass', efsStorageClass);
+
           basicCluster.addManifest('EfsPersistentVolume', persistentVolume);
 
-          const persistentVolume2 = {
+           const persistentVolume2 = {
             apiVersion: 'v1',
             kind: 'PersistentVolume',
             metadata: { name: 'efs-pv2' },
@@ -94,13 +104,8 @@ export class MainStack2 extends cdk.Stack {
             },
           };
           basicCluster.addManifest('EfsPersistentVolume2', persistentVolume2);
+
           
-          basicCluster.addHelmChart('EfsCsiDriver', {
-            repository: 'https://kubernetes-sigs.github.io/aws-efs-csi-driver/',
-            chart: 'aws-efs-csi-driver',
-            release: 'efs-csi-driver',
-            namespace: 'kube-system',
-          });
           basicCluster.addManifest('IngressNamespace', {
             apiVersion: 'v1',
             kind: 'Namespace',
@@ -108,7 +113,7 @@ export class MainStack2 extends cdk.Stack {
               name: 'ingress',
             },
           });
-      
+
           basicCluster.addHelmChart('NginxIngress', {
             repository: 'https://kubernetes.github.io/ingress-nginx',
             chart: 'ingress-nginx',
@@ -118,7 +123,7 @@ export class MainStack2 extends cdk.Stack {
               controller: {
                 service: {
                   annotations: {
-                    'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
+                    'service.beta.kubernetes.io/aws-load-balancer-type': 'elb'
                   },
                 },
               },
@@ -126,9 +131,12 @@ export class MainStack2 extends cdk.Stack {
           });
         const jenkinsInst = new JenkinsManager(basicCluster);
         jenkinsInst.installJenkins()
+                                                  
+         
         const sonarqubeInst = new SonarqubeManager(basicCluster);
         sonarqubeInst.installSonarqube();
-       /* const ingressInst = new IngressManager(basicCluster);
-        ingressInst.installIngress();*/
+        const ingressInst = new IngressManager(basicCluster);
+        ingressInst.installIngress();
+       /** */
     }
 }

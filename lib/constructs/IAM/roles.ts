@@ -8,7 +8,7 @@ class RoleConstruct extends Construct {
     super(scope, id);
     this.masterRole = new iam.Role(this, id, {
       inlinePolicies: { "basicPolicyDeploy": PoliciesAllDeploy },
-      roleName: `master4`,
+      roleName: `master6`,
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal('ec2.amazonaws.com'),
         new iam.ServicePrincipal('eks.amazonaws.com'),
