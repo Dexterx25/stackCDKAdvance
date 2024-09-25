@@ -10,7 +10,9 @@ kind: ServiceAccount
 metadata:
   name: jenkins-serviceaccount
   namespace: jenkins
+
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -42,30 +44,22 @@ spec:
       labels:
         app: jenkins
     spec:
-      serviceAccountName: jenkins-serviceaccount
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
       containers:
-      - name: jenkins
-        image: jenkins/jenkins:lts
-        ports:
-        - containerPort: 8080
-          name: manager
-        - containerPort: 50000
-          name: jnlp
-        volumeMounts:
-        - mountPath: /var/jenkins_home
-          name: jenkins-volume
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1"
+        - name: jenkins
+          image: jenkins/jenkins:lts
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
       volumes:
-      - name: jenkins-volume
-        persistentVolumeClaim:
-          claimName: jenkins-pvc
-
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-pvc
 ---
 
 apiVersion: v1

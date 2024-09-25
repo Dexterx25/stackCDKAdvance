@@ -7,18 +7,19 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx  # Aquí se especifica el nombre de la IngressClass
   rules:
     - http:
         paths:
           - path: /jenkins(/|$)(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: jenkins
                 port:
-                  number: 8080
+                  number: 80
           - path: /sonarqube(/|$)(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: sonarqube

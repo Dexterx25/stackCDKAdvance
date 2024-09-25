@@ -40,8 +40,9 @@ spec:
     spec:
       serviceAccountName: sonarqube-serviceaccount
       securityContext:
-        fsGroup: 1000 
-        runAsUser: 1000
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
       containers:
         - name: sonarqube
           image: sonarqube:lts
