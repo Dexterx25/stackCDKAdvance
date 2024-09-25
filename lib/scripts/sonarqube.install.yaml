@@ -39,10 +39,13 @@ spec:
         app: sonarqube
     spec:
       serviceAccountName: sonarqube-serviceaccount
-      securityContext:
-        runAsUser: 0
-        runAsGroup: 0
-        fsGroup: 0
+      initContainers:
+      - name: init-permissions
+        image: busybox
+        command: ['sh', '-c', 'chown -R 1000:1000 /opt/sonarqube/data']
+        volumeMounts:
+        - name: sonarqube-data
+          mountPath: /opt/sonarqube/data
       containers:
         - name: sonarqube
           image: sonarqube:lts
@@ -77,7 +80,7 @@ metadata:
   name: sonarqube
   namespace: sonarqube
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - port: 9000
       targetPort: 9000

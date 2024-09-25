@@ -67,6 +67,12 @@ kubectl get services
 kubectl delete -f <archivo.yaml>
 
 
+## delete all pods from namespace: 
+kubectl delete pod -n jenkins --all
+
+### delete specif pod: 
+kubectl delete pod <nombre-pod>
+kubectl delete pod <podname-id> -n <namesapce>
 ## 
 kubectl exec -it <nombre-pod> -- <comando>
 
@@ -125,3 +131,29 @@ kubectl create rolebinding <nombre-rolebinding> --clusterrole=<nombre-clusterrol
 
 ## reset pv claimRef:
 kubectl patch pv efs-pv -p '{"spec":{"claimRef":null}}'
+
+
+## forwardin
+kubectl port-forward svc/jenkins -n jenkins 8080:80
+kubectl port-forward svc/sonarqube -n sonarqube 9000:9000
+
+
+## access to kiali dashboard istio:
+kubectl port-forward -n istio-system svc/kiali 20001:20001
+
+## remove pod with label: 
+kubectl delete pod -l app=kiali -n istio-system
+
+
+openssl rand -base64 16
+y+9G0zxcJMVLyH5WR9EMEA==
+
+juand@DexterDesk MINGW64 ~/Documents/software/devOps/stackCDKAdvance (features/eks_properly)
+$ kubectl create secret generic kiali-login \
+  --from-literal=username=admin \
+  --from-literal=password=<tu-contraseña-segura> \
+  -n istio-system
+
+
+## enter to container pod
+kubectl run -it --rm --restart=Never --image=busybox test-pod -- sh

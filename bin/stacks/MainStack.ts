@@ -36,7 +36,7 @@ export class MainStack2 extends cdk.Stack {
             lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
             performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
             throughputMode: efs.ThroughputMode.BURSTING,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
           });
           fileSystem.connections.allowFrom(securityGroup, ec2.Port.tcp(2049), 'Allow NFS access');
 
@@ -49,6 +49,37 @@ export class MainStack2 extends cdk.Stack {
             vpc,
             efsId: fileSystem.fileSystemId
         })
+
+        basicCluster.addHelmChart('IstioChart', {
+            chart: 'istiod',
+            repository: 'https://istio-release.storage.googleapis.com/charts',
+            namespace: 'istio-system',
+            createNamespace: true,
+        });
+
+        basicCluster.addHelmChart('KialiChart', {
+            chart: 'kiali-server',
+            repository: 'https://kiali.org/helm-charts',
+            namespace: 'istio-system',
+            createNamespace: false,
+            values: {
+              auth: {
+                strategy: 'anonymous'
+              },
+              external_services: {
+                grafana: {
+                  enabled: true,
+                  url: 'http://a03951f4e16f943d1a457758b543f7c7-474119699.us-east-2.elb.amazonaws.com:3000',
+                },
+                prometheus: {
+                  enabled: true,
+                  url: 'http://ab11144bdb5244b29ad19677772d191a-1678984514.us-east-2.elb.amazonaws.com:9090',
+                }
+              },
+              secretName: 'kiali-login',
+            },
+          });
+          
 
         basicCluster.addHelmChart('EfsCsiDriver', {
             repository: 'https://kubernetes-sigs.github.io/aws-efs-csi-driver/',
