@@ -126,9 +126,9 @@ export class MainStack2 extends cdk.Stack {
           });
         const jenkinsInst = new JenkinsManager(basicCluster);
         jenkinsInst.installJenkins()
-       /* const sonarqubeInst = new SonarqubeManager(basicCluster);
+        const sonarqubeInst = new SonarqubeManager(basicCluster);
         sonarqubeInst.installSonarqube();
-        const ingressInst = new IngressManager(basicCluster);
+       /* const ingressInst = new IngressManager(basicCluster);
         ingressInst.installIngress();*/
     }
 }
