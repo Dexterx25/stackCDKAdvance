@@ -3,10 +3,17 @@ import * as eks from "aws-cdk-lib/aws-eks";
 import { KubectlV30Layer } from '@aws-cdk/lambda-layer-kubectl-v30';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+interface EKSClusterProps {
+  role: iam.Role;
+  vpc: cdk.aws_ec2.Vpc;
+  securityGroup: cdk.aws_ec2.SecurityGroup;
+  efsId: string;
+  adminUsername: string;
+}
 
 class EKSClusterConstruct extends Construct {
   public basicCluster: eks.Cluster;
-  constructor(scope: Construct, id: string, props: any) {
+  constructor(scope: Construct, id: string, props: EKSClusterProps) {
     super(scope, id);
     const role: cdk.aws_iam.Role = props.role
     const layyer = new KubectlV30Layer(this, 'KubectlLayer')
@@ -37,6 +44,7 @@ class EKSClusterConstruct extends Construct {
         desiredSize: 2,
         minSize: 1,
         maxSize: 3,
+        nodeRole: role,
       });
 
   }

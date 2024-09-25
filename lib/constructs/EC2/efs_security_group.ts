@@ -3,7 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2'
 
 
 
-class SecurityGroupConstruct extends Construct {
+class SecurityGroupEFSConstruct extends Construct {
     public basicSecurityGroup: ec2.SecurityGroup
     constructor(scope: Construct, id: string, props: any) {
         super(scope, id);
@@ -31,4 +31,4 @@ class SecurityGroupConstruct extends Construct {
          this.basicSecurityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.icmpPing(), 'Allow ICMP (ping)');  
     }
 }
-export default SecurityGroupConstruct;
+export default SecurityGroupEFSConstruct;

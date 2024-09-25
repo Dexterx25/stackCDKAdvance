@@ -4,12 +4,18 @@ metadata:
   name: sonarqube
 ---
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sonarqube-serviceaccount
+  namespace: sonarqube
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sonarqube-pvc
   namespace: sonarqube
 spec:
-  volumeName: efs-pv
+  volumeName: efs-pv2
   storageClassName: efs-sc
   accessModes:
     - ReadWriteMany
@@ -32,6 +38,7 @@ spec:
       labels:
         app: sonarqube
     spec:
+      serviceAccountName: sonarqube-serviceaccount
       securityContext:
         fsGroup: 1000 
         runAsUser: 1000
@@ -50,12 +57,19 @@ spec:
           volumeMounts:
             - name: sonarqube-data
               mountPath: /opt/sonarqube/data
+            - name: sonarqube-logs
+              mountPath: /opt/sonarqube/logs
+            - name: sonarqube-temp
+              mountPath: /opt/sonarqube/temp
       volumes:
         - name: sonarqube-data
           persistentVolumeClaim:
             claimName: sonarqube-pvc
+        - name: sonarqube-logs
+          emptyDir: {}
+        - name: sonarqube-temp
+          emptyDir: {}
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
