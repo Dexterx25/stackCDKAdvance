@@ -10,6 +10,20 @@ kind: ServiceAccount
 metadata:
   name: jenkins-serviceaccount
   namespace: jenkins
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pvc
+  namespace: jenkins
+spec:
+  storageClassName: efs-sc
+  volumeName: efs-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
 
 ---
 
@@ -49,7 +63,8 @@ spec:
             cpu: "1"
       volumes:
       - name: jenkins-volume
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
 
 ---
 

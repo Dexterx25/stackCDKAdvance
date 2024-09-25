@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sonarqube
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-pvc
+  namespace: sonarqube
+spec:
+  volumeName: efs-pv
+  storageClassName: efs-sc
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarqube
+  namespace: sonarqube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube
+  template:
+    metadata:
+      labels:
+        app: sonarqube
+    spec:
+      securityContext:
+        fsGroup: 1000 
+        runAsUser: 1000
+      containers:
+        - name: sonarqube
+          image: sonarqube:lts
+          ports:
+            - containerPort: 9000
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+          volumeMounts:
+            - name: sonarqube-data
+              mountPath: /opt/sonarqube/data
+      volumes:
+        - name: sonarqube-data
+          persistentVolumeClaim:
+            claimName: sonarqube-pvc
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarqube
+  namespace: sonarqube
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    app: sonarqube
