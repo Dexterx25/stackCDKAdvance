@@ -1,11 +1,10 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import { Fn, StackProps } from 'aws-cdk-lib';
+import { StackProps } from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import { getString } from '../../../utils';
 
 class CustomVpc  extends Construct {
      public vpc: ec2.IVpc;
-     constructor(scope: Construct, id: string, projectProps: StackProps) {
+     constructor(scope: Construct, id: string, _projectProps: StackProps) {
      super(scope, id);
      this.vpc = new ec2.Vpc(this, 
         `${id}`,

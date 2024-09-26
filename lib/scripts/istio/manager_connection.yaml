@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: example-service
+  namespace: default
+spec:
+  host: example-service.default.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100                # Máximo de conexiones simultáneas permitidas
+      http:
+        http1MaxPendingRequests: 50        # Máximo de solicitudes pendientes antes de activar el Circuit Breaker
+        maxRequestsPerConnection: 1        # Limitar el número de solicitudes por conexión
+        maxRetries: 3                      # Número máximo de intentos (retries)
+    outlierDetection:
+      consecutiveErrors: 5                 # Número de errores consecutivos antes de que un host sea excluido
+      interval: 1s                         # Intervalo de detección de fallas
+      baseEjectionTime: 30s                # Tiempo que un host permanecerá fuera antes de ser reincorporado
+      maxEjectionPercent: 100              # Porcentaje máximo de hosts que se pueden excluir

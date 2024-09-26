@@ -26,7 +26,6 @@ class EKSClusterConstruct extends Construct {
       endpointAccess: eks.EndpointAccess.PUBLIC_AND_PRIVATE,
       defaultCapacity: 0,
     });
-
     const dexRole: cdk.aws_iam.Role = role
     
     this.basicCluster.awsAuth.addMastersRole(dexRole, 'master');

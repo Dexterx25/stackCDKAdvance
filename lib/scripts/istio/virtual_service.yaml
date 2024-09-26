@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: example-service
+spec:
+  hosts:
+  - example-service.default.svc.cluster.local
+  http:
+  - retries:
+      attempts: 3
+      perTryTimeout: 2s
+    route:
+    - destination:
+        host: example-service.default.svc.cluster.local
+        port:
+          number: 80

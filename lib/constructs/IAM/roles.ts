@@ -4,7 +4,7 @@ import { PoliciesAllDeploy } from "./policies";
 class RoleConstruct extends Construct {
    public masterRole
 
-   constructor(scope: Construct, id: string, props: any) {
+   constructor(scope: Construct, id: string, _props: any) {
     super(scope, id);
     this.masterRole = new iam.Role(this, id, {
       inlinePolicies: { "basicPolicyDeploy": PoliciesAllDeploy },
