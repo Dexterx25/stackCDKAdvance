@@ -74,5 +74,13 @@ spec:
       targetPort: 8080
       protocol: TCP
       name: manager
+    - port: 50001
+      targetPort: 8080
+      protocol: TCP
+      name: jenkins-port-2
+    - port: 50000
+      targetPort: 8080
+      protocol: TCP
+      name: jenkins-port-3
   selector:
     app: jenkins

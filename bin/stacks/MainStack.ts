@@ -5,11 +5,12 @@ import { CustomVpc } from "../../lib/constructs/EC2/vpc_construct";
 import * as efs from "aws-cdk-lib/aws-efs";
 import EKSClusterConstruct from "../../lib/constructs/EKS/clusterConstruct";
 import SecurityGroupConstruct from "../../lib/constructs/EC2/security_group_construct";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import { ECRConstruct } from "../../lib/constructs/ECR/ECR_construct";
+import AutoScallingEC2Construct from "../../lib/constructs/EC2/autoScalling_construct";
 import JenkinsManager from "../../lib/constructs/EKS/jenkins";
 import SonarqubeManager from "../../lib/constructs/EKS/sonnarqube";
 import IngressManager from "../../lib/constructs/EKS/ingressManager";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import { ECRConstruct } from "../../lib/constructs/ECR/ECR_construct";
 
 export class MainStack2 extends cdk.Stack {
   constructor(scope: Construct, id: string, props: any) {
@@ -40,8 +41,14 @@ export class MainStack2 extends cdk.Stack {
       ec2.Port.tcp(2049),
       "Allow NFS access"
     );
+    const {autoScallingEC2} = new AutoScallingEC2Construct(this, `${id}/asg`, {
+      ...props,
+      role,
+      securityGroup,
+      vpc,
+    })
 
-    const { basicCluster } = new EKSClusterConstruct(
+   const {basicCluster}  = new EKSClusterConstruct(
       this,
       `${id}/eks_cluster`,
       {
@@ -52,6 +59,7 @@ export class MainStack2 extends cdk.Stack {
         role,
         vpc,
         efsId: fileSystem.fileSystemId,
+        autoScallingEC2,
       }
     );
     
@@ -59,7 +67,7 @@ export class MainStack2 extends cdk.Stack {
       ...props,
       repoName: 'repotest',
     });
-
+    
     basicCluster.addHelmChart("IstioChart", {
       chart: "istiod",
       repository: "https://istio-release.storage.googleapis.com/charts",
@@ -167,6 +175,7 @@ export class MainStack2 extends cdk.Stack {
         },
       },
     });
+
     const jenkinsInst = new JenkinsManager(basicCluster);
     jenkinsInst.installJenkins();
 
@@ -174,6 +183,5 @@ export class MainStack2 extends cdk.Stack {
     sonarqubeInst.installSonarqube();
     const ingressInst = new IngressManager(basicCluster);
     ingressInst.installIngress();
-    /** */
   }
 }

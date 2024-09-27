@@ -157,3 +157,36 @@ $ kubectl create secret generic kiali-login \
 
 ## enter to container pod
 kubectl run -it --rm --restart=Never --image=busybox test-pod -- sh
+
+## see control plane: 
+kubectl cluster-info
+Kubernetes control plane is running at https://33AD6E04EBA6909ECE82689558F4135F.yl4.us-east-2.eks.amazonaws.com
+CoreDNS is running at https://33AD6E04EBA6909ECE82689558F4135F.yl4.us-east-2.eks.amazonaws.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+
+## create secret service account: 
+ kubectl create secret generic mi-secret --from-literal=username=jenkins --from-literal=password=123123 -n jenkins
+
+## create token
+kubectl create secret generic jenkins-sa-token --type kubernetes.io/service-account-token --namespace jenkins --annotation kubernetes.io/service-account.name=jenkins-sa
+
+## create secret with token:
+kubectl create secret generic my-token-secret \
+  --from-literal=token=$(openssl rand -base64 32) \
+  --namespace jenkins
+secret/my-token-secret created
+
+## verify
+kubectl get serviceaccount jenkins-sa -n jenkins -o jsonpath='{.secrets[0].name}'
+my-token-secret
+juand@DexterDesk MINGW64 ~/Documents/software/devOps/stackCDKAdvance/lib/scripts (features/eks_properly)
+$ kubectl get secret my-token-secret -n jenkins -o jsonpath='{.data.token}' | base64 --decode
+nnTZu7H/ICqnQn6Z+8jiYraq/yO88AYfZ2vJlexP7uo=
+
+
+## WORKS:: create token for existing user:
+kubectl create token jenkins-sa --namespace jenkins
+
+kubectl create token jenkins-sa-1 --namespace jenkins --duration 99999y

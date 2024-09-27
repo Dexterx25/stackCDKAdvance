@@ -4,12 +4,15 @@ import { KubectlV30Layer } from "@aws-cdk/lambda-layer-kubectl-v30";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { PoliciesAllDeploy } from "../IAM";
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+
 interface EKSClusterProps {
   role: iam.Role;
   vpc: cdk.aws_ec2.Vpc;
   securityGroup: cdk.aws_ec2.SecurityGroup;
   efsId: string;
   adminUsername: string;
+  autoScallingEC2: autoscaling.AutoScalingGroup;
 }
 
 class EKSClusterConstruct extends Construct {
@@ -36,11 +39,15 @@ class EKSClusterConstruct extends Construct {
     this.basicCluster.awsAuth.addUserMapping(dexUser, {
       groups: ["system:masters"],
     });
-    this.basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
+  
+    this.basicCluster.connectAutoScalingGroupCapacity(props.autoScallingEC2, {
+      mapRole: true
+    })
+/*     this.basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
       instanceType: new cdk.aws_ec2.InstanceType("t2.medium"),
       minCapacity: 1,
       maxCapacity: 3,
-    });
+    }); */
     const clusterCreationRole = this.basicCluster.adminRole;
 
     clusterCreationRole.addManagedPolicy(
