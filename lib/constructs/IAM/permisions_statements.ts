@@ -84,7 +84,15 @@ const statementsAll: iam.PolicyStatement[] = [
   }),
   new iam.PolicyStatement({
     actions: [
-      'elasticloadbalancing:*'
+      'elasticloadbalancing:*',
+      "sts:AssumeRole",
+    ],
+    effect: iam.Effect.ALLOW,
+    resources: ['*'],
+  }),
+  new iam.PolicyStatement({
+    actions: [
+      'lambda:*'
     ],
     effect: iam.Effect.ALLOW,
     resources: ['*'],

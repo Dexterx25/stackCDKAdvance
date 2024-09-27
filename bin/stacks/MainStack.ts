@@ -33,7 +33,7 @@ export class MainStack2 extends cdk.Stack {
       lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
       performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
       throughputMode: efs.ThroughputMode.BURSTING,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
     fileSystem.connections.allowFrom(
       securityGroup,
@@ -89,7 +89,6 @@ export class MainStack2 extends cdk.Stack {
         secretName: "kiali-login",
       },
     });
-
     basicCluster.addHelmChart("EfsCsiDriver", {
       repository: "https://kubernetes-sigs.github.io/aws-efs-csi-driver/",
       chart: "aws-efs-csi-driver",
@@ -124,7 +123,7 @@ export class MainStack2 extends cdk.Stack {
     };
     basicCluster.addManifest("EfsStorageClass", efsStorageClass);
 
-    basicCluster.addManifest("EfsPersistentVolume", persistentVolume);
+    basicCluster.addManifest("EfsPersistentVolume", persistentVolume).node.addDependency(fileSystem);
 
     const persistentVolume2 = {
       apiVersion: "v1",
