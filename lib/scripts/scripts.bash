@@ -190,3 +190,11 @@ nnTZu7H/ICqnQn6Z+8jiYraq/yO88AYfZ2vJlexP7uo=
 kubectl create token jenkins-sa --namespace jenkins
 
 kubectl create token jenkins-sa-1 --namespace jenkins --duration 99999y
+
+
+
+kubectl create secret docker-registry kaniko-secret \
+    --docker-server=345594604328.dkr.ecr.us-east-2.amazonaws.com/cdk-hnb659fds-container-assets-345594604328-us-east-2 \
+    --docker-username=AWS \
+    --docker-password=$(aws ecr get-login-password --region us-east-2) \
+    --docker-email=est.jvergara627@smart.edu.co

@@ -43,11 +43,11 @@ class EKSClusterConstruct extends Construct {
     this.basicCluster.connectAutoScalingGroupCapacity(props.autoScallingEC2, {
       mapRole: true
     })
-/*     this.basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
+    this.basicCluster.addAutoScalingGroupCapacity(`${id}/asg`, {
       instanceType: new cdk.aws_ec2.InstanceType("t2.medium"),
       minCapacity: 1,
       maxCapacity: 3,
-    }); */
+    });
     const clusterCreationRole = this.basicCluster.adminRole;
 
     clusterCreationRole.addManagedPolicy(

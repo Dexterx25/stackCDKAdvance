@@ -4,7 +4,7 @@ metadata:
   name: jenkins-clusterrolebinding
 subjects:
 - kind: ServiceAccount
-  name: jenkins-sa-1
+  name: jenkins-sa
   namespace: jenkins
 roleRef:
   kind: ClusterRole
