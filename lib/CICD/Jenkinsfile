@@ -1,0 +1,142 @@
+pipeline {
+    agent any
+
+    environment {
+        // Definir variables de entorno
+        ECR_REPO_URI = '<AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/myapp'
+        DOCKER_IMAGE = ''
+        COVERAGE_THRESHOLD = 80
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clonar el código desde GitHub
+                git branch: 'main', url: 'https://github.com/myrepo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                // Construir la imagen Docker
+                script {
+                    DOCKER_IMAGE = docker.build("${ECR_REPO_URI}:${env.BUILD_ID}")
+                }
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                // Ejecutar pruebas unitarias
+                sh 'npm run test:unit --coverage'
+                // Verificar cobertura de código
+                script {
+                    def coverage = sh(script: 'npm run coverage-report', returnStdout: true).trim()
+                    if (coverage < COVERAGE_THRESHOLD) {
+                        error("Cobertura de pruebas unitarias es menor a ${COVERAGE_THRESHOLD}%")
+                    }
+                }
+            }
+        }
+        stage('Integration Tests') {
+            steps {
+                // Ejecutar pruebas de integración
+                sh 'npm run test:integration --coverage'
+                // Verificar cobertura de pruebas de integración
+                script {
+                    def coverage = sh(script: 'npm run coverage-report', returnStdout: true).trim()
+                    if (coverage < COVERAGE_THRESHOLD) {
+                        error("Cobertura de pruebas de integración es menor a ${COVERAGE_THRESHOLD}%")
+                    }
+                }
+            }
+        }
+        stage('Contract Testing') {
+            steps {
+                // Ejecutar pruebas contractuales (contract testing)
+                sh 'npm run test:contract --coverage'
+                // Verificar cobertura de pruebas contractuales
+                script {
+                    def coverage = sh(script: 'npm run coverage-report', returnStdout: true).trim()
+                    if (coverage < COVERAGE_THRESHOLD) {
+                        error("Cobertura de contract testing es menor a ${COVERAGE_THRESHOLD}%")
+                    }
+                }
+            }
+        }
+        stage('Code Quality with SonarQube') {
+            steps {
+                // Análisis de SonarQube
+                withSonarQubeEnv('SonarQube') {
+                    sh 'sonar-scanner'
+                }
+                // Esperar los resultados del análisis
+                script {
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
+        }
+        stage('Security Checks with OWASP') {
+            steps {
+                // Verificar seguridad usando OWASP Dependency Check
+                sh 'dependency-check --project myapp --scan ./ --format "XML" --out ./owasp-report'
+            }
+        }
+        stage('Push to ECR') {
+            steps {
+                // Subir la imagen Docker a ECR
+                script {
+                    docker.withRegistry('https://<AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com', 'ecr:login') {
+                        DOCKER_IMAGE.push()
+                    }
+                }
+            }
+        }
+        stage('Deploy to Dev') {
+            steps {
+                // Despliegue automático a Dev sin aprobación manual
+                sh """
+                    aws eks --region <REGION> update-kubeconfig --name <EKS_CLUSTER_NAME>
+                    kubectl set image deployment/myapp-deployment myapp=${ECR_REPO_URI}:${env.BUILD_ID} --namespace=dev --record
+                """
+            }
+        }
+        stage('Manual Approval for QA') {
+            steps {
+                // Aprobación manual para pasar a QA
+                input message: '¿Aprobar despliegue a QA?', ok: 'Aprobar'
+            }
+        }
+        stage('Deploy to QA') {
+            steps {
+                // Desplegar a QA
+                sh """
+                    aws eks --region <REGION> update-kubeconfig --name <EKS_CLUSTER_NAME>
+                    kubectl set image deployment/myapp-deployment myapp=${ECR_REPO_URI}:${env.BUILD_ID} --namespace=qa --record
+                """
+            }
+        }
+        stage('Manual Approval for Prod') {
+            steps {
+                // Aprobación manual para pasar a Prod
+                input message: '¿Aprobar despliegue a Prod?', ok: 'Aprobar'
+            }
+        }
+        stage('Deploy to Prod') {
+            steps {
+                // Desplegar a Prod
+                sh """
+                    aws eks --region <REGION> update-kubeconfig --name <EKS_CLUSTER_NAME>
+                    kubectl set image deployment/myapp-deployment myapp=${ECR_REPO_URI}:${env.BUILD_ID} --namespace=prod --record
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            // Limpieza de imágenes locales después del build
+            sh 'docker system prune -f'
+        }
+    }
+}

@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fix-permissions
+  namespace: jenkins
+spec:
+  template:
+    spec:
+      containers:
+      - name: fix-permissions
+        image: amazonlinux
+        command:
+        - /bin/sh
+        - -c
+        - |
+          yum install -y nfs-utils &&
+          mkdir -p /mnt/efs &&
+          mount -t nfs4 -o nfsvers=4.1 fs-00e2786c33c97c626.efs.us-east-2.amazonaws.com:/ /mnt/efs &&
+          chown -R 1000:1000 /mnt/efs/var/jenkins_home &&
+          chmod -R 775 /mnt/efs/var/jenkins_home
+        volumeMounts:
+        - mountPath: /mnt/efs
+          name: efs-volume
+      restartPolicy: Never
+      volumes:
+      - name: efs-volume
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+  backoffLimit: 4

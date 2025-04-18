@@ -1,4 +1,4 @@
-project_name: "cdkDeploy"
+project_name: "cdkDeploy2"
 framework_version: 1
 
 account: "0"
@@ -21,8 +21,6 @@ lambda_parameters:
     NODE_ENV: "dev"
     PROJECT_NAME: "DexApp"
     NODE_API_PORT: "3000"
-  db_tables:
-    - "BAAS.BANK4US"
   secrets:
 tags:
   Project: "DexApp"
