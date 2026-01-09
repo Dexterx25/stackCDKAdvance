@@ -198,3 +198,161 @@ kubectl create secret docker-registry kaniko-secret \
     --docker-username=AWS \
     --docker-password=$(aws ecr get-login-password --region us-east-2) \
     --docker-email=est.jvergara627@smart.edu.co
+
+Here is a list of `kubectl` commands with improved descriptions and organized for easier reading:
+
+### General Commands
+
+- **`kubectl help`**  
+  Displays general help about `kubectl` commands.
+
+- **`kubectl version`**  
+  Shows the version of `kubectl` and the Kubernetes server.
+
+### Pod Management
+
+- **`kubectl get pods -n <namespace>`**  
+  Retrieves the list of pods in the specified namespace.
+
+- **`kubectl delete pod <pod-name>`**  
+  Deletes the specified pod.
+
+- **`kubectl logs <pod-name>`**  
+  Displays the logs of the specified pod.
+
+- **`kubectl logs <pod-name> -n <namespace>`**  
+  Displays the logs of the pod in the specified namespace.
+
+- **`kubectl logs -f <pod-name> -n <namespace>`**  
+  Displays real-time logs of the pod in the specified namespace.
+
+- **`kubectl describe pod <pod-name> -n <namespace>`**  
+  Shows detailed information about the specified pod.
+
+- **`kubectl exec -it <pod-name> -n <namespace> -- /bin/sh`**  
+  Opens an interactive terminal in the pod using `sh`.
+
+- **`kubectl exec -it <pod-name> -n <namespace> -- /bin/bash`**  
+  Opens an interactive terminal in the pod using `bash`.
+
+### Service Management
+
+- **`kubectl get services`**  
+  Retrieves the list of services.
+
+- **`kubectl get services -n <namespace>`**  
+  Retrieves the list of services in the specified namespace.
+
+- **`kubectl describe service <service-name>`**  
+  Shows detailed information about the specified service.
+
+- **`kubectl delete service <service-name>`**  
+  Deletes the specified service.
+
+- **`kubectl get service <service-name> -n <namespace> -o wide`**  
+  Displays detailed information about the service in the specified namespace.
+
+### Deployment Management
+
+- **`kubectl get deployments`**  
+  Retrieves the list of deployments.
+
+- **`kubectl get deployments -n <namespace>`**  
+  Retrieves the list of deployments in the specified namespace.
+
+- **`kubectl describe deployment <deployment-name> -n <namespace>`**  
+  Shows detailed information about the specified deployment.
+
+- **`kubectl delete deployment <deployment-name>`**  
+  Deletes the specified deployment.
+
+- **`kubectl get deployments -n internal --selector=<service-selector-name>`**  
+  Retrieves deployments in the internal namespace that match the specified selector.
+
+### CronJob Management
+
+- **`kubectl get cronjobs -n internal`**  
+  Retrieves the list of cronjobs in the internal namespace.
+
+- **`kubectl describe cronjob <cronjob-name> -n <namespace>`**  
+  Shows detailed information about the specified cronjob.
+
+- **`kubectl delete cronjob <cronjob-name>`**  
+  Deletes the specified cronjob.
+
+### Resource Management
+
+- **`kubectl get replicasets -n <namespace> --selector=<service-selector-name>`**  
+  Retrieves replicasets in the specified namespace that match the selector.
+
+- **`kubectl describe replicaset <replicaset-name> -n <namespace>`**  
+  Shows detailed information about the specified replicaset.
+
+- **`kubectl get configmaps -n <namespace>`**  
+  Retrieves the list of configmaps in the specified namespace.
+
+- **`kubectl get secrets -n <namespace>`**  
+  Retrieves the list of secrets in the specified namespace.
+
+- **`kubectl get events -n <namespace> --sort-by=.metadata.creationTimestamp`**  
+  Retrieves events in the specified namespace, sorted by creation timestamp.
+
+### Cluster Resources
+
+- **`kubectl cluster-info`**  
+  Displays information about the cluster.
+
+- **`kubectl top nodes`**  
+  Shows resource usage metrics for the nodes.
+
+- **`kubectl top pods -n <namespace>`**  
+  Shows resource usage metrics for the pods in the specified namespace.
+
+- **`kubectl get pv`**  
+  Retrieves the list of Persistent Volumes.
+
+- **`kubectl get pvc -n <namespace>`**  
+  Retrieves the list of Persistent Volume Claims in the specified namespace.
+
+- **`kubectl get namespaces`**  
+  Retrieves the list of namespaces in the cluster.
+
+- **`kubectl get nodes`**  
+  Retrieves the list of nodes in the cluster.
+
+### Other Commands
+
+- **`kubectl apply -f <configuration-file.yaml>`**  
+  Applies the configuration specified in the YAML file.
+
+- **`kubectl delete -f <configuration-file.yaml>`**  
+  Deletes the resources specified in the YAML file.
+
+- **`kubectl api-resources`**  
+  Displays the available API resources in the cluster.
+
+- **`kubectl get secrets --all-namespaces`**  
+  Retrieves the list of secrets in all namespaces.
+
+- **`kubectl get configmaps --all-namespaces`**  
+  Retrieves the list of configmaps in all namespaces.
+
+- **`kubectl get jobs --all-namespaces`**  
+  Retrieves the list of jobs in all namespaces.
+
+- **`kubectl describe node <node-name>`**  
+  Shows detailed information about the specified node.
+- kubectl delete pods -n default -l app.kubernetes.io/instance=sle-console-ms-scheduling
+### Observations
+
+- **To monitor resources:**
+  - Use `get` commands to check the general status of pods and services.
+  - You can use `kubectl logs <pod-name>` to review the logs of pods.
+  - Use `kubectl describe` to get additional details about resources.
+
+### Namespace Notes
+
+- Use the **`internal`** namespace for internal resources such as microservices and cronjobs.
+- Use the **`public`** namespace for external resources such as APIs.
+
+This structure should help you better understand and use `kubectl` commands more effectively.
